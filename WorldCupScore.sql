@@ -12,21 +12,22 @@ WITH new as (
             WHEN guest_goals < host_goals THEN 0
         END AS guest_score
     FROM matches),
-guestscore as (
-    SELECT guest_team as teams,SUM(guest_score) as score
-    FROM new
-    GROUP BY guest_team),
-hostscore as (
-    SELECT host_team as teams,SUM(host_score) as score
-    FROM new
-    GROUP BY host_team),
+
 combine as (
-    SELECT * FROM guestscore
-    UNION ALL SELECT * FROM hostscore),
+    SELECT * FROM (
+        SELECT guest_team as teams,SUM(guest_score) as score
+        FROM new
+        GROUP BY guest_team) as guest
+    UNION ALL SELECT * FROM (
+        SELECT host_team as teams,SUM(host_score) as score
+        FROM new
+        GROUP BY host_team) as host),
+
 combined as (
     SELECT teams, SUM(score) as score
     FROM combine
     GROUP BY teams),
+    
 overall as (
     SELECT * FROM teams
     LEFT JOIN combined
